@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StartupBench</title>
+    <meta
+      name="description"
+      content="StartupBench benchmarks general-purpose agents on market-validated startup workflows with multi-format deliverables and fine-grained rubrics."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650;9..144,800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" data-header>
+      <a class="brand" href="#top" aria-label="StartupBench home">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="assets/bytedance-color.svg" alt="" />
+        </span>
+        <span>StartupBench</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#overview">Overview</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#benchmark">Benchmark</a>
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#findings">Findings</a>
+        <a href="#citation">Citation</a>
+      </nav>
+      <a class="nav-paper" href="assets/StartupBench.pdf" target="_blank" rel="noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14 2H6.5A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22h11A2.5 2.5 0 0 0 20 19.5V8l-6-6Zm-.75 1.9L18.1 8.75h-3.35a1.5 1.5 0 0 1-1.5-1.5V3.9ZM8 13h8v1.5H8V13Zm0 4h8v1.5H8V17Zm0-8h3.5v1.5H8V9Z" />
+        </svg>
+        Paper
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-pad">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">Market-validated agent workflows</p>
+          <h1>StartupBench</h1>
+          <p class="subtitle">Benchmarking General-Purpose Agents on Market-Validated Workflows</p>
+          <p class="hero-text">
+            StartupBench evaluates whether frontier agents can complete realistic workflows that users already
+            delegate to AI-native startup products. Tasks span professional domains, require long-horizon execution,
+            and are judged through multi-format deliverables rather than isolated short answers.
+          </p>
+          <div class="hero-actions" aria-label="Project actions">
+            <a class="button primary" href="assets/StartupBench.pdf" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.5 3h7.2L19 8.3v11.2A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-15A1.5 1.5 0 0 1 6.5 3Zm6.2 1.7v3.6c0 .55.45 1 1 1h3.6L12.7 4.7ZM8 13h8v1.5H8V13Zm0 4h8v1.5H8V17Z" />
+              </svg>
+              Read paper
+            </a>
+            <a class="button secondary" href="#leaderboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 21V9h4v12H5Zm5 0V3h4v18h-4Zm5 0V13h4v8h-4Z" />
+              </svg>
+              View results
+            </a>
+          </div>
+        </div>
+        <figure class="hero-figure reveal">
+          <img src="assets/startupbench_overview.png" alt="StartupBench workflow overview from user request to multi-format deliverables." />
+        </figure>
+      </section>
+
+      <section id="overview" class="section-pad compact">
+        <div class="stat-strip reveal" aria-label="StartupBench key statistics">
+          <article class="stat-card blue">
+            <span class="stat-value">97</span>
+            <span class="stat-label">real-world workflow tasks</span>
+          </article>
+          <article class="stat-card green">
+            <span class="stat-value">6</span>
+            <span class="stat-label">professional domains</span>
+          </article>
+          <article class="stat-card orange">
+            <span class="stat-value">25.3</span>
+            <span class="stat-label">rubrics per task on average</span>
+          </article>
+          <article class="stat-card violet">
+            <span class="stat-value">7+</span>
+            <span class="stat-label">frontier model families evaluated</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-pad split-section">
+        <div class="section-title reveal">
+          <p class="eyebrow">Why it matters</p>
+          <h2>From isolated tests to delegated work.</h2>
+        </div>
+        <div class="reason-grid reveal">
+          <article class="reason-card">
+            <span class="mini-kicker">01</span>
+            <h3>Market source</h3>
+            <p>Tasks are derived from startup-agent products, product demos, and interviews around workflows users actually want to delegate.</p>
+          </article>
+          <article class="reason-card">
+            <span class="mini-kicker">02</span>
+            <h3>End-to-end scope</h3>
+            <p>Each task asks agents to search, reason, compose, verify, and deliver artifacts under realistic workspace constraints.</p>
+          </article>
+          <article class="reason-card">
+            <span class="mini-kicker">03</span>
+            <h3>Artifact-first scoring</h3>
+            <p>Evaluation inspects files and evidence views with weighted rubrics, capturing whether a deliverable is production-ready.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="pipeline" class="section-pad tinted">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Data construction</p>
+          <h2>A startup-to-benchmark pipeline.</h2>
+          <p>
+            StartupBench starts with market-vetted agents, collects scenario evidence, builds workflow artifacts,
+            and calibrates task difficulty through quality control.
+          </p>
+        </div>
+        <figure class="wide-figure construction-figure reveal">
+          <img src="assets/startupbench_construction_flow.png" alt="StartupBench data construction pipeline." />
+        </figure>
+        <div class="step-grid reveal" aria-label="StartupBench construction steps">
+          <article class="step-card green">
+            <span>1</span>
+            <h3>Startup agent selection</h3>
+            <p>Filter funded products with active demos, clear users, and deployable workflow scenarios.</p>
+          </article>
+          <article class="step-card blue">
+            <span>2</span>
+            <h3>Interview and task scoping</h3>
+            <p>Collect target users, business constraints, expected outputs, and reference materials.</p>
+          </article>
+          <article class="step-card orange">
+            <span>3</span>
+            <h3>Data production</h3>
+            <p>Build prompts, workspaces, ground truth deliverables, rubrics, and noisy real-world files.</p>
+          </article>
+          <article class="step-card violet">
+            <span>4</span>
+            <h3>Quality calibration</h3>
+            <p>Review clarity, realism, ambiguity, rubric validity, and discriminative difficulty.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="benchmark" class="section-pad benchmark-section">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Benchmark anatomy</p>
+          <h2>Six domains, many deliverable formats.</h2>
+          <p>
+            The benchmark stresses professional conventions across medical, finance, legal, management, STEM,
+            and education workflows, with outputs ranging from spreadsheets to slide decks and reports.
+          </p>
+        </div>
+        <div class="benchmark-layout">
+          <div class="domain-panel reveal">
+            <div class="domain-row" style="--w: 21.6%; --c: var(--red)">
+              <span>Medical</span><strong>21</strong>
+            </div>
+            <div class="domain-row" style="--w: 18.6%; --c: var(--gold)">
+              <span>Finance</span><strong>18</strong>
+            </div>
+            <div class="domain-row" style="--w: 19.6%; --c: var(--teal)">
+              <span>Business &amp; Management</span><strong>19</strong>
+            </div>
+            <div class="domain-row" style="--w: 16.5%; --c: var(--blue)">
+              <span>Legal</span><strong>16</strong>
+            </div>
+            <div class="domain-row" style="--w: 16.5%; --c: var(--violet)">
+              <span>STEM &amp; Computer Science</span><strong>16</strong>
+            </div>
+            <div class="domain-row" style="--w: 7.2%; --c: var(--orange)">
+              <span>Education &amp; Humanities</span><strong>7</strong>
+            </div>
+          </div>
+          <figure class="table-figure reveal">
+            <img src="assets/startupbench_stats_table.png" alt="Table 2 statistics of StartupBench." />
+          </figure>
+        </div>
+        <div class="format-rail reveal" aria-label="Supported deliverable formats">
+          <span>DOCX</span>
+          <span>XLSX</span>
+          <span>PPTX</span>
+          <span>PDF</span>
+          <span>Markdown</span>
+          <span>Images</span>
+          <span>Text artifacts</span>
+        </div>
+      </section>
+
+      <section id="leaderboard" class="section-pad tinted leaderboard-section">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Results</p>
+          <h2>High average scores still leave production gaps.</h2>
+          <p>
+            The best model reaches a 72.96 average score, but only 26.80 pass@1 under the strict score >= 90 criterion.
+            Partial completion often falls short of a fully usable workflow deliverable.
+          </p>
+        </div>
+        <div class="leaderboard-shell reveal" data-leaderboard>
+          <div class="leaderboard-toolbar">
+            <div>
+              <h3>Dynamic leaderboard</h3>
+              <p>Average score and pass@1 across evaluated frontier agents.</p>
+            </div>
+            <div class="sort-controls" aria-label="Leaderboard sorting">
+              <button class="sort-button is-active" type="button" data-sort="average" aria-pressed="true">Average</button>
+              <button class="sort-button" type="button" data-sort="pass" aria-pressed="false">Pass@1</button>
+              <button class="sort-button" type="button" data-sort="gap" aria-pressed="false">Gap</button>
+            </div>
+          </div>
+          <div class="leaderboard-grid">
+            <div class="rank-list" data-leaderboard-cards aria-live="polite"></div>
+            <div class="leaderboard-table-wrap">
+              <table class="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Rank</th>
+                    <th scope="col">Model</th>
+                    <th scope="col">Average</th>
+                    <th scope="col">Pass@1</th>
+                    <th scope="col">Gap</th>
+                  </tr>
+                </thead>
+                <tbody data-leaderboard-body></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="result-stack leaderboard-metrics" aria-label="Leaderboard highlights">
+            <article class="result-card navy">
+              <span class="result-number">72.96</span>
+              <p>Top average score from GPT-5.5.</p>
+            </article>
+            <article class="result-card blue">
+              <span class="result-number">26.80</span>
+              <p>Top pass@1, showing fewer than one third of tasks reach score >= 90.</p>
+            </article>
+            <article class="result-card orange">
+              <span class="result-number">92%</span>
+              <p>Human agreement for the Agent-as-Judge framework.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="findings" class="section-pad findings-section">
+        <div class="section-title reveal">
+          <p class="eyebrow">Failure modes</p>
+          <h2>Where agents break in realistic work.</h2>
+        </div>
+        <div class="finding-grid reveal">
+          <article class="finding-card">
+            <h3>Complex instruction following</h3>
+            <p>Agents partially satisfy dense task specifications, leaving requested files, sections, or constraints incomplete.</p>
+          </article>
+          <article class="finding-card">
+            <h3>Domain-specific expertise</h3>
+            <p>Professional norms in finance, legal, medical, and business workflows expose gaps that generic fluency cannot cover.</p>
+          </article>
+          <article class="finding-card">
+            <h3>Long-horizon execution</h3>
+            <p>Multi-step workflows require planning, retrieval, artifact assembly, and consistency over extended contexts.</p>
+          </article>
+          <article class="finding-card">
+            <h3>Deliverable quality</h3>
+            <p>Outputs can look plausible while missing formulas, cached spreadsheet values, citations, slide polish, or file structure.</p>
+          </article>
+          <article class="finding-card">
+            <h3>Self-verification hallucination</h3>
+            <p>Agents may claim that requirements are satisfied even when generated artifacts fail rubric-level inspection.</p>
+          </article>
+          <article class="finding-card">
+            <h3>Format compliance</h3>
+            <p>Real workflows demand exact suffixes and multi-file outputs; missing or malformed artifacts count as operational failures.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-pad evaluation-section">
+        <div class="evaluation-board reveal">
+          <div>
+            <p class="eyebrow">Evaluation</p>
+            <h2>Agent-as-Judge over original artifacts.</h2>
+            <p>
+              Each submission is transformed into evidence views and scored against fine-grained weighted criteria.
+              This keeps evaluation aligned with deliverable correctness instead of surface-level answer similarity.
+            </p>
+          </div>
+          <div class="metric-grid" aria-label="Evaluation highlights">
+            <article>
+              <span>25.3</span>
+              <p>rubrics per task</p>
+            </article>
+            <article>
+              <span>90</span>
+              <p>pass threshold</p>
+            </article>
+            <article>
+              <span>1.66</span>
+              <p>average framework variation</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="citation" class="section-pad citation-section">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Citation</p>
+          <h2>StartupBench paper.</h2>
+        </div>
+        <pre class="bibtex reveal"><code>@misc{startupbench2026,
+  title  = {StartupBench: Benchmarking General-Purpose Agents on Market-Validated Workflows},
+  year   = {2026},
+  note   = {Project page for StartupBench}
+}</code></pre>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>StartupBench</span>
+      <a href="assets/StartupBench.pdf" target="_blank" rel="noreferrer">Paper PDF</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
