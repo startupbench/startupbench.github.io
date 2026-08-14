@@ -12,14 +12,17 @@ const caseExpected = document.querySelector('[data-case-expected]');
 const caseErrors = document.querySelector('[data-case-errors]');
 const caseProcess = document.querySelector('[data-case-process]');
 const caseModels = document.querySelector('[data-case-models]');
+const caseTrajectory = document.querySelector('.case-trajectory');
 const caseTrajectoryMeta = document.querySelector('[data-case-trajectory-meta]');
 const caseRunTabs = document.querySelector('[data-case-run-tabs]');
 const caseTrajectorySteps = document.querySelector('[data-case-trajectory-steps]');
 const trajectoryStepKicker = document.querySelector('[data-trajectory-step-kicker]');
+const trajectoryStepType = document.querySelector('[data-trajectory-step-type]');
 const trajectoryStepTitle = document.querySelector('[data-trajectory-step-title]');
 const trajectoryStepDetail = document.querySelector('[data-trajectory-step-detail]');
 const trajectoryStepEvidence = document.querySelector('[data-trajectory-step-evidence]');
 const trajectoryStepState = document.querySelector('[data-trajectory-step-state]');
+const trajectoryStepSource = document.querySelector('[data-trajectory-step-source]');
 const trajectoryPlay = document.querySelector('[data-trajectory-play]');
 const trajectoryNext = document.querySelector('[data-trajectory-next]');
 const trajectoryCounter = document.querySelector('[data-trajectory-counter]');
@@ -36,6 +39,10 @@ const leaderboardData = [
   { model: 'Qwen-3.6-Max', family: 'Alibaba Qwen', average: 59.46, pass: 15.12 },
   { model: 'Gemini-3.1-Pro', family: 'Google Gemini', average: 49.73, pass: 6.53 },
 ];
+
+const caseModelData = leaderboardData.filter(
+  (row) => !['Kimi-k3', 'GPT-5.6-sol', 'GLM-5.1'].includes(row.model)
+);
 
 const rankColors = ['#10447f', '#2065c8', '#28a8a0', '#8752bf', '#f59d4a', '#eeb94a', '#e65454', '#5a7898', '#7c6f64'];
 let sortKey = 'average';
@@ -101,7 +108,7 @@ function buildRunTrajectory(row, record, copy) {
 }
 
 function buildFeishuRuns(records, copy) {
-  return leaderboardData.map((row) => {
+  return caseModelData.map((row) => {
     const record = records[row.model];
     if (!record) {
       return {
@@ -125,6 +132,29 @@ function buildFeishuRuns(records, copy) {
       trajectory: buildRunTrajectory(row, record, copy),
     };
   });
+}
+
+function getTrajectoryKind(step) {
+  if (step.kind) {
+    const kindMap = {
+      user: { label: 'User', className: 'user' },
+      assistant: { label: 'Assistant', className: 'assistant' },
+      tool_call: { label: 'Tool Call', className: 'tool-call' },
+      tool_result: { label: 'Tool Result', className: 'tool-result' },
+      judge: { label: 'Judge', className: 'judge' },
+      meta: { label: 'Meta', className: 'meta' },
+    };
+    if (kindMap[step.kind]) return kindMap[step.kind];
+  }
+
+  const title = `${step.title || ''} ${step.source || ''}`.toLowerCase();
+  if (title.includes('tool call')) return { label: 'Tool Call', className: 'tool-call' };
+  if (title.includes('tool result')) return { label: 'Tool Result', className: 'tool-result' };
+  if (title.includes('user') || title.includes('task')) return { label: 'User', className: 'user' };
+  if (title.includes('judge')) return { label: 'Judge', className: 'judge' };
+  if (title.includes('metadata')) return { label: 'Meta', className: 'meta' };
+  if (title.includes('assistant')) return { label: 'Assistant', className: 'assistant' };
+  return { label: step.source || 'Event', className: 'event' };
 }
 
 const exampleCases = [
@@ -599,19 +629,22 @@ function createRunTab(run) {
 
 function createTrajectoryStep(step, index) {
   const item = document.createElement('li');
+  const kind = getTrajectoryKind(step);
   const button = document.createElement('button');
-  button.className = 'trajectory-step-button';
+  button.className = `trajectory-step-button ${kind.className}`;
   button.classList.toggle('is-active', index === activeTrajectoryStep);
   button.type = 'button';
   button.setAttribute('aria-pressed', String(index === activeTrajectoryStep));
 
   const kicker = document.createElement('span');
   kicker.textContent = step.kicker;
+  const type = document.createElement('mark');
+  type.textContent = kind.label;
   const title = document.createElement('strong');
   title.textContent = step.title;
   const state = document.createElement('em');
   state.textContent = step.state;
-  button.append(kicker, title, state);
+  button.append(kicker, type, title, state);
 
   button.addEventListener('click', () => {
     stopTrajectoryPlayback();
@@ -629,10 +662,12 @@ function renderTrajectory(example) {
     !caseRunTabs ||
     !caseTrajectorySteps ||
     !trajectoryStepKicker ||
+    !trajectoryStepType ||
     !trajectoryStepTitle ||
     !trajectoryStepDetail ||
     !trajectoryStepEvidence ||
     !trajectoryStepState ||
+    !trajectoryStepSource ||
     !trajectoryPlay ||
     !trajectoryNext ||
     !trajectoryCounter ||
@@ -646,8 +681,10 @@ function renderTrajectory(example) {
   activeTrajectoryStep = Math.min(activeTrajectoryStep, Math.max(trajectory.length - 1, 0));
   const activeStep = trajectory[activeTrajectoryStep];
   const progress = trajectory.length <= 1 ? 100 : (activeTrajectoryStep / (trajectory.length - 1)) * 100;
+  const activeKind = activeStep ? getTrajectoryKind(activeStep) : { label: 'Event', className: 'event' };
 
-  caseTrajectoryMeta.textContent = `${activeRun.model} / ${trajectory.length} events / score ${formatCaseScore(activeRun.score)} / ${activeRun.result}`;
+  caseTrajectory?.classList.toggle('is-playing', isTrajectoryPlaying);
+  caseTrajectoryMeta.textContent = `${activeRun.model} / ${trajectory.length} events / score ${formatCaseScore(activeRun.score)}`;
   trajectoryPlay.textContent = isTrajectoryPlaying ? 'Pause' : 'Play';
   trajectoryPlay.disabled = trajectory.length <= 1;
   trajectoryNext.disabled = trajectory.length <= 1 || activeTrajectoryStep >= trajectory.length - 1;
@@ -658,10 +695,13 @@ function renderTrajectory(example) {
 
   if (!activeStep) return;
   trajectoryStepKicker.textContent = activeStep.kicker;
+  trajectoryStepType.textContent = activeKind.label;
+  trajectoryStepType.className = `trajectory-kind ${activeKind.className}`;
   trajectoryStepTitle.textContent = activeStep.title;
   trajectoryStepDetail.textContent = activeStep.detail;
   trajectoryStepEvidence.textContent = activeStep.evidence;
   trajectoryStepState.textContent = activeStep.state;
+  trajectoryStepSource.textContent = activeStep.source || activeKind.label;
 
   window.requestAnimationFrame(() => {
     caseTrajectorySteps.querySelector('.trajectory-step-button.is-active')?.scrollIntoView({

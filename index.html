@@ -259,7 +259,7 @@
           <h2>Open a workflow and inspect each agent run.</h2>
           <p>
             Each example surfaces the original task, model execution trace, score, produced result, and failure points
-            behind the aggregate leaderboard. Missing case-level model blocks from the Feishu sheet are marked as N/A.
+            behind the aggregate leaderboard, with replayable traces for the selected case-level model runs.
           </p>
         </div>
         <div class="case-board reveal" data-case-board>
@@ -309,9 +309,12 @@
               <div class="case-trajectory-grid">
                 <ol class="trajectory-steps" data-case-trajectory-steps></ol>
                 <article class="trajectory-detail">
-                  <span data-trajectory-step-kicker></span>
+                  <div class="trajectory-detail-topline">
+                    <span data-trajectory-step-kicker></span>
+                    <span data-trajectory-step-type></span>
+                  </div>
                   <h5 data-trajectory-step-title></h5>
-                  <p data-trajectory-step-detail></p>
+                  <pre data-trajectory-step-detail></pre>
                   <dl>
                     <div>
                       <dt>Evidence</dt>
@@ -320,6 +323,10 @@
                     <div>
                       <dt>State</dt>
                       <dd data-trajectory-step-state></dd>
+                    </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd data-trajectory-step-source></dd>
                     </div>
                   </dl>
                 </article>
