@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650;9..144,800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=compact-20260815-4" />
   </head>
   <body>
     <header class="site-header" data-header>
@@ -256,97 +256,14 @@
       <section id="cases" class="section-pad cases-section">
         <div class="section-heading reveal">
           <p class="eyebrow">Example cases</p>
-          <h2>Open a workflow and inspect each agent run.</h2>
+          <h2>Explore StartupBench cases.</h2>
           <p>
-            Each example surfaces the original task, model execution trace, score, produced result, and failure points
-            behind the aggregate leaderboard, with replayable traces for the selected case-level model runs.
+            Click any case to inspect the task, full model trajectories, judge scores,
+            generated artifacts, and failure points behind the leaderboard.
           </p>
         </div>
-        <div class="case-board reveal" data-case-board>
+        <div class="case-board case-entry-board reveal" data-case-board data-case-mode="modal">
           <div class="case-list" data-case-list aria-label="StartupBench example cases"></div>
-          <article class="case-workbench" data-case-detail aria-live="polite">
-            <div class="case-workbench-header">
-              <div>
-                <p class="case-source" data-case-source></p>
-                <h3 data-case-title></h3>
-              </div>
-              <div class="case-chips" data-case-chips></div>
-            </div>
-            <div class="case-summary-grid">
-              <section>
-                <h4>Task</h4>
-                <p data-case-task></p>
-              </section>
-              <section>
-                <h4>Expected Result</h4>
-                <p data-case-expected></p>
-              </section>
-              <section>
-                <h4>Error Points</h4>
-                <ul data-case-errors></ul>
-              </section>
-            </div>
-            <div class="case-process">
-              <h4>Execution Process</h4>
-              <ol data-case-process></ol>
-            </div>
-            <div class="case-trajectory">
-              <div class="case-trajectory-header">
-                <div>
-                  <h4>Trajectory Replay</h4>
-                  <p data-case-trajectory-meta></p>
-                </div>
-                <div class="trajectory-controls">
-                  <button type="button" class="trajectory-play" data-trajectory-play>Play</button>
-                  <button type="button" class="trajectory-next" data-trajectory-next>Next</button>
-                  <span data-trajectory-counter></span>
-                </div>
-                <div class="case-run-tabs" data-case-run-tabs></div>
-              </div>
-              <div class="trajectory-progress" aria-hidden="true">
-                <span data-trajectory-progress></span>
-              </div>
-              <div class="case-trajectory-grid">
-                <ol class="trajectory-steps" data-case-trajectory-steps></ol>
-                <article class="trajectory-detail">
-                  <div class="trajectory-detail-topline">
-                    <span data-trajectory-step-kicker></span>
-                    <span data-trajectory-step-type></span>
-                  </div>
-                  <h5 data-trajectory-step-title></h5>
-                  <pre data-trajectory-step-detail></pre>
-                  <dl>
-                    <div>
-                      <dt>Evidence</dt>
-                      <dd data-trajectory-step-evidence></dd>
-                    </div>
-                    <div>
-                      <dt>State</dt>
-                      <dd data-trajectory-step-state></dd>
-                    </div>
-                    <div>
-                      <dt>Source</dt>
-                      <dd data-trajectory-step-source></dd>
-                    </div>
-                  </dl>
-                </article>
-              </div>
-            </div>
-            <div class="case-model-table-wrap">
-              <table class="case-model-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Model</th>
-                    <th scope="col">Process</th>
-                    <th scope="col">Score</th>
-                    <th scope="col">Result</th>
-                    <th scope="col">Error Point</th>
-                  </tr>
-                </thead>
-                <tbody data-case-models></tbody>
-              </table>
-            </div>
-          </article>
         </div>
       </section>
 
@@ -427,6 +344,100 @@
       <span>StartupBench</span>
       <a href="assets/StartupBench.pdf" target="_blank" rel="noreferrer">Paper PDF</a>
     </footer>
+
+    <div class="case-modal-overlay" data-case-modal role="dialog" aria-modal="true" aria-labelledby="case-modal-title">
+      <div class="case-modal">
+        <div class="case-modal-head">
+          <div>
+            <p class="case-modal-kicker">StartupBench case replay</p>
+            <h3 id="case-modal-title" data-case-modal-title>Case replay</h3>
+            <p data-case-modal-sub></p>
+          </div>
+          <button type="button" class="case-modal-close" data-case-modal-close aria-label="Close case replay">&times;</button>
+        </div>
+        <div class="case-modal-body">
+          <article class="case-workbench case-workbench-compact" data-case-detail aria-live="polite">
+            <div class="case-hidden-context" hidden>
+              <div>
+                <p class="case-source" data-case-source></p>
+                <h3 data-case-title></h3>
+              </div>
+              <div class="case-chips" data-case-chips></div>
+              <section class="case-expected-source">
+                <h4>Expected Result</h4>
+                <p data-case-expected></p>
+              </section>
+              <section class="case-errors-source">
+                <h4>Error Points</h4>
+                <ul data-case-errors></ul>
+              </section>
+              <div class="case-process">
+                <h4>Execution Process</h4>
+                <ol data-case-process></ol>
+              </div>
+            </div>
+            <div class="case-trajectory">
+              <div class="case-trajectory-header">
+                <div>
+                  <h4>Trajectory Replay</h4>
+                  <p data-case-trajectory-meta></p>
+                </div>
+                <div class="trajectory-controls">
+                  <button type="button" class="trajectory-play" data-trajectory-play>Play</button>
+                  <button type="button" class="trajectory-next" data-trajectory-next>Next</button>
+                  <span data-trajectory-counter></span>
+                </div>
+              </div>
+              <div class="trajectory-progress" aria-hidden="true">
+                <span data-trajectory-progress></span>
+              </div>
+              <div class="case-trajectory-grid">
+                <aside class="case-replay-side">
+                  <div class="case-run-tabs" data-case-run-tabs></div>
+                  <section class="case-prompt-panel">
+                    <h5>Task</h5>
+                    <p data-case-task></p>
+                  </section>
+                </aside>
+                <ol class="trajectory-steps" data-case-trajectory-steps></ol>
+                <article class="trajectory-detail">
+                  <div class="trajectory-detail-topline">
+                    <span data-trajectory-step-kicker></span>
+                    <span data-trajectory-step-type></span>
+                  </div>
+                  <h5 data-trajectory-step-title></h5>
+                  <pre data-trajectory-step-detail></pre>
+                  <dl>
+                    <div>
+                      <dt>Evidence</dt>
+                      <dd data-trajectory-step-evidence></dd>
+                    </div>
+                    <div>
+                      <dt>State</dt>
+                      <dd data-trajectory-step-state></dd>
+                    </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd data-trajectory-step-source></dd>
+                    </div>
+                  </dl>
+                </article>
+              </div>
+            </div>
+            <section class="case-model-panel" aria-label="Case-level model outcomes">
+              <div class="case-model-panel-header">
+                <div>
+                  <h4>Model Outcomes</h4>
+                  <p>Click a model row to replay its run.</p>
+                </div>
+                <span>Process / Score / Result / Error</span>
+              </div>
+              <div class="case-model-list" data-case-models></div>
+            </section>
+          </article>
+        </div>
+      </div>
+    </div>
 
     <script src="case-traces.js"></script>
     <script src="script.js"></script>

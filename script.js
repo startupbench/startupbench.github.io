@@ -3,6 +3,11 @@ const revealItems = document.querySelectorAll('.reveal');
 const leaderboardCards = document.querySelector('[data-leaderboard-cards]');
 const leaderboardBody = document.querySelector('[data-leaderboard-body]');
 const sortButtons = document.querySelectorAll('[data-sort]');
+const caseBoard = document.querySelector('[data-case-board]');
+const caseModal = document.querySelector('[data-case-modal]');
+const caseModalClose = document.querySelector('[data-case-modal-close]');
+const caseModalTitle = document.querySelector('[data-case-modal-title]');
+const caseModalSub = document.querySelector('[data-case-modal-sub]');
 const caseList = document.querySelector('[data-case-list]');
 const caseTitle = document.querySelector('[data-case-title]');
 const caseSource = document.querySelector('[data-case-source]');
@@ -45,8 +50,9 @@ const caseModelData = leaderboardData.filter(
 );
 
 const rankColors = ['#10447f', '#2065c8', '#28a8a0', '#8752bf', '#f59d4a', '#eeb94a', '#e65454', '#5a7898', '#7c6f64'];
+const initialCaseId = new URLSearchParams(window.location.search).get('case');
 let sortKey = 'average';
-let activeCaseId = 'hr-payroll-feishu';
+let activeCaseId = initialCaseId || 'hr-payroll-feishu';
 let activeRunModel = 'GPT-5.5';
 let activeTrajectoryStep = 0;
 let isTrajectoryPlaying = false;
@@ -491,9 +497,14 @@ function renderLeaderboard() {
 }
 
 function createCaseCard(example) {
+  const isModalMode = caseBoard?.dataset.caseMode === 'modal';
   const article = document.createElement('article');
   article.className = 'case-card';
   article.classList.toggle('is-active', example.id === activeCaseId);
+  if (isModalMode) {
+    article.setAttribute('role', 'button');
+    article.setAttribute('tabindex', '0');
+  }
 
   const meta = document.createElement('span');
   meta.className = 'case-card-meta';
@@ -505,19 +516,35 @@ function createCaseCard(example) {
   const failure = document.createElement('p');
   failure.textContent = example.failure;
 
+  const scoredRuns = example.runs.filter((run) => run.score !== null && !Number.isNaN(run.score));
+  const bestScore = scoredRuns.length ? Math.max(...scoredRuns.map((run) => run.score)) : null;
+  const stats = document.createElement('div');
+  stats.className = 'case-card-stats';
+  stats.innerHTML = `
+    <span><b>${example.runs.length}</b> model runs</span>
+    <span><b>${formatCaseScore(bestScore)}</b> best score</span>
+  `;
+
   const button = document.createElement('button');
   button.className = 'case-start';
   button.type = 'button';
   button.setAttribute('aria-pressed', String(example.id === activeCaseId));
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z" /></svg><span>Start</span>';
   button.addEventListener('click', () => {
-    activeCaseId = example.id;
-    activeRunModel = getDefaultRun(example).model;
-    activeTrajectoryStep = 0;
-    startTrajectoryPlayback();
+    openCaseModal(example);
   });
 
-  article.append(meta, title, failure, button);
+  article.addEventListener('click', (event) => {
+    if (!isModalMode || event.target.closest('button')) return;
+    openCaseModal(example);
+  });
+  article.addEventListener('keydown', (event) => {
+    if (!isModalMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    openCaseModal(example);
+  });
+
+  article.append(meta, title, failure, stats, button);
   return article;
 }
 
@@ -536,6 +563,12 @@ function replaceTextList(node, tagName, items) {
       return child;
     })
   );
+}
+
+function compactText(value, limit = 160) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1).trim()}...`;
 }
 
 function getDefaultRun(example) {
@@ -560,30 +593,58 @@ function stopTrajectoryPlayback() {
   isTrajectoryPlaying = false;
 }
 
+function openCaseModal(example) {
+  if (!caseModal) return;
+  stopTrajectoryPlayback();
+  activeCaseId = example.id;
+  activeRunModel = getDefaultRun(example).model;
+  activeTrajectoryStep = 0;
+  renderCases();
+  caseModal.classList.add('is-open');
+  document.body.classList.add('case-modal-open');
+}
+
+function closeCaseModal() {
+  if (!caseModal) return;
+  stopTrajectoryPlayback();
+  caseModal.classList.remove('is-open');
+  document.body.classList.remove('case-modal-open');
+  renderCases();
+}
+
 function startTrajectoryPlayback() {
   stopTrajectoryPlayback();
-  isTrajectoryPlaying = true;
-  trajectoryTimer = window.setInterval(() => {
-    const activeCase = getActiveCase();
-    const activeRun = getActiveRun(activeCase);
-    const stepCount = activeRun.trajectory?.length || 0;
+  const activeCase = getActiveCase();
+  const activeRun = getActiveRun(activeCase);
+  const stepCount = activeRun.trajectory?.length || 0;
+  if (stepCount <= 1) {
+    renderTrajectory(activeCase);
+    return;
+  }
 
-    if (activeTrajectoryStep >= stepCount - 1) {
+  if (activeTrajectoryStep >= stepCount - 1) activeTrajectoryStep = 0;
+  isTrajectoryPlaying = true;
+  renderTrajectory(activeCase);
+  trajectoryTimer = window.setInterval(() => {
+    const currentCase = getActiveCase();
+    const currentRun = getActiveRun(currentCase);
+    const currentStepCount = currentRun.trajectory?.length || 0;
+
+    if (activeTrajectoryStep >= currentStepCount - 1) {
       stopTrajectoryPlayback();
-      renderCases();
+      renderTrajectory(currentCase);
       return;
     }
 
     activeTrajectoryStep += 1;
-    renderCases();
+    renderTrajectory(currentCase);
   }, trajectoryIntervalMs);
-  renderCases();
 }
 
 function toggleTrajectoryPlayback() {
   if (isTrajectoryPlaying) {
     stopTrajectoryPlayback();
-    renderCases();
+    renderTrajectory(getActiveCase());
     return;
   }
 
@@ -591,7 +652,6 @@ function toggleTrajectoryPlayback() {
   const activeRun = getActiveRun(activeCase);
   const stepCount = activeRun.trajectory?.length || 0;
   if (stepCount <= 1) return;
-  if (activeTrajectoryStep >= stepCount - 1) activeTrajectoryStep = 0;
   startTrajectoryPlayback();
 }
 
@@ -601,7 +661,7 @@ function advanceTrajectory() {
   const activeRun = getActiveRun(activeCase);
   const stepCount = activeRun.trajectory?.length || 0;
   activeTrajectoryStep = stepCount ? Math.min(activeTrajectoryStep + 1, stepCount - 1) : 0;
-  renderCases();
+  renderTrajectory(activeCase);
 }
 
 function createRunTab(run) {
@@ -614,14 +674,15 @@ function createRunTab(run) {
 
   const label = document.createElement('strong');
   label.textContent = run.model;
-  const score = document.createElement('span');
-  score.textContent = formatCaseScore(run.score);
-  button.append(label, score);
+  const meta = document.createElement('span');
+  meta.textContent = `${run.family} / ${formatCaseScore(run.score)}`;
+  button.append(label, meta);
 
   button.addEventListener('click', () => {
+    stopTrajectoryPlayback();
     activeRunModel = run.model;
     activeTrajectoryStep = 0;
-    startTrajectoryPlayback();
+    renderCaseDetail(getActiveCase());
   });
 
   return button;
@@ -642,18 +703,44 @@ function createTrajectoryStep(step, index) {
   type.textContent = kind.label;
   const title = document.createElement('strong');
   title.textContent = step.title;
+  const preview = document.createElement('small');
+  preview.textContent = compactText(step.detail, 150);
   const state = document.createElement('em');
   state.textContent = step.state;
-  button.append(kicker, type, title, state);
+  button.append(kicker, type, title, preview, state);
 
   button.addEventListener('click', () => {
     stopTrajectoryPlayback();
     activeTrajectoryStep = index;
-    renderCases();
+    renderTrajectory(getActiveCase());
   });
 
   item.append(button);
   return item;
+}
+
+function keepActiveTrajectoryStepVisible() {
+  if (!caseTrajectorySteps) return;
+  const activeButton = caseTrajectorySteps.querySelector('.trajectory-step-button.is-active');
+  if (!activeButton) return;
+
+  const margin = 18;
+  const containerRect = caseTrajectorySteps.getBoundingClientRect();
+  const activeRect = activeButton.getBoundingClientRect();
+  let nextScrollTop = caseTrajectorySteps.scrollTop;
+
+  if (activeRect.top < containerRect.top + margin) {
+    nextScrollTop += activeRect.top - containerRect.top - margin;
+  } else if (activeRect.bottom > containerRect.bottom - margin) {
+    nextScrollTop += activeRect.bottom - containerRect.bottom + margin;
+  } else {
+    return;
+  }
+
+  caseTrajectorySteps.scrollTo({
+    top: Math.max(0, nextScrollTop),
+    behavior: isTrajectoryPlaying ? 'smooth' : 'auto',
+  });
 }
 
 function renderTrajectory(example) {
@@ -688,7 +775,7 @@ function renderTrajectory(example) {
   trajectoryPlay.textContent = isTrajectoryPlaying ? 'Pause' : 'Play';
   trajectoryPlay.disabled = trajectory.length <= 1;
   trajectoryNext.disabled = trajectory.length <= 1 || activeTrajectoryStep >= trajectory.length - 1;
-  trajectoryCounter.textContent = trajectory.length ? `${activeTrajectoryStep + 1} / ${trajectory.length}` : '0 / 0';
+  trajectoryCounter.textContent = trajectory.length ? `Step ${activeTrajectoryStep + 1}/${trajectory.length}` : 'Step 0/0';
   trajectoryProgress.style.setProperty('--progress', `${progress}%`);
   caseRunTabs.replaceChildren(...example.runs.map(createRunTab));
   caseTrajectorySteps.replaceChildren(...trajectory.map(createTrajectoryStep));
@@ -703,52 +790,71 @@ function renderTrajectory(example) {
   trajectoryStepState.textContent = activeStep.state;
   trajectoryStepSource.textContent = activeStep.source || activeKind.label;
 
-  window.requestAnimationFrame(() => {
-    caseTrajectorySteps.querySelector('.trajectory-step-button.is-active')?.scrollIntoView({
-      block: 'nearest',
-      behavior: isTrajectoryPlaying ? 'smooth' : 'auto',
-    });
-  });
+  window.requestAnimationFrame(keepActiveTrajectoryStepVisible);
+}
+
+function createCaseModelField(label, text) {
+  const field = document.createElement('div');
+  field.className = 'case-model-field';
+  const labelNode = document.createElement('span');
+  labelNode.textContent = label;
+  const valueNode = document.createElement('p');
+  valueNode.textContent = text;
+  field.append(labelNode, valueNode);
+  return field;
 }
 
 function createCaseModelRow(run) {
-  const tr = document.createElement('tr');
-  tr.classList.toggle('is-active', run.model === activeRunModel);
-  tr.addEventListener('click', () => {
+  const row = document.createElement('article');
+  const selectRun = () => {
+    stopTrajectoryPlayback();
     activeRunModel = run.model;
     activeTrajectoryStep = 0;
-    startTrajectoryPlayback();
+    renderCaseDetail(getActiveCase());
+  };
+
+  row.className = 'case-model-row';
+  row.classList.toggle('is-active', run.model === activeRunModel);
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+  row.setAttribute('aria-pressed', String(run.model === activeRunModel));
+  row.addEventListener('click', selectRun);
+  row.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    selectRun();
   });
 
-  const model = document.createElement('td');
+  const model = document.createElement('div');
+  model.className = 'case-model-identity';
   const modelName = document.createElement('strong');
   modelName.textContent = run.model;
   const family = document.createElement('span');
   family.textContent = run.family;
   model.append(modelName, family);
 
-  const process = document.createElement('td');
-  process.textContent = run.process;
-
-  const score = document.createElement('td');
+  const score = document.createElement('div');
+  score.className = 'case-model-score';
   const scorePill = document.createElement('span');
   scorePill.className = 'case-score-pill';
   scorePill.classList.toggle('is-muted', run.score === null);
   scorePill.textContent = formatCaseScore(run.score);
   score.append(scorePill);
 
-  const result = document.createElement('td');
-  result.textContent = run.result;
-
-  const error = document.createElement('td');
-  error.textContent = run.error;
-
-  tr.append(model, process, score, result, error);
-  return tr;
+  row.append(
+    model,
+    score,
+    createCaseModelField('Process', run.process),
+    createCaseModelField('Result', run.result),
+    createCaseModelField('Error point', run.error)
+  );
+  return row;
 }
 
 function renderCaseDetail(example) {
   if (!caseTitle || !caseSource || !caseChips || !caseTask || !caseExpected || !caseErrors || !caseProcess || !caseModels) return;
+  if (caseModalTitle) caseModalTitle.textContent = example.title;
+  if (caseModalSub) caseModalSub.textContent = `${example.source} / ${example.domain} / ${example.artifact}`;
   caseTitle.textContent = example.title;
   caseSource.textContent = example.source;
   caseChips.replaceChildren(createChip(example.domain), createChip(example.artifact), createChip(example.failure));
@@ -762,7 +868,8 @@ function renderCaseDetail(example) {
 
 function renderCases() {
   if (!caseList) return;
-  const activeCase = exampleCases.find((example) => example.id === activeCaseId) || exampleCases[0];
+  const activeCase = getActiveCase();
+  activeCaseId = activeCase.id;
   caseList.replaceChildren(...exampleCases.map(createCaseCard));
   renderCaseDetail(activeCase);
 }
@@ -799,6 +906,13 @@ for (const button of sortButtons) {
 
 trajectoryPlay?.addEventListener('click', toggleTrajectoryPlayback);
 trajectoryNext?.addEventListener('click', advanceTrajectory);
+caseModalClose?.addEventListener('click', closeCaseModal);
+caseModal?.addEventListener('click', (event) => {
+  if (event.target === caseModal) closeCaseModal();
+});
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && caseModal?.classList.contains('is-open')) closeCaseModal();
+});
 
 updateHeader();
 renderLeaderboard();
