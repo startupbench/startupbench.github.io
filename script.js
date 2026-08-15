@@ -58,6 +58,59 @@ let activeTrajectoryStep = 0;
 let isTrajectoryPlaying = false;
 let trajectoryTimer = null;
 const trajectoryIntervalMs = 950;
+const staggerSelector = [
+  '.stat-card',
+  '.reason-card',
+  '.step-card',
+  '.domain-row',
+  '.format-rail span',
+  '.rank-row',
+  '.case-card',
+  '.finding-card',
+  '.result-card',
+  '.metric-grid article',
+].join(', ');
+
+function prepareStaggeredReveal(root = document) {
+  root.querySelectorAll('.reveal').forEach((container, revealIndex) => {
+    container.style.setProperty('--reveal-delay', Math.min(revealIndex * 18, 126));
+    container.querySelectorAll(staggerSelector).forEach((child, index) => {
+      child.style.setProperty('--stagger-index', index);
+    });
+  });
+}
+
+function animateStatValue(node) {
+  if (node.dataset.animated === 'true') return;
+  const raw = node.textContent.trim();
+  const target = Number.parseFloat(raw);
+  if (!Number.isFinite(target)) return;
+
+  node.dataset.animated = 'true';
+  const decimals = raw.includes('.') ? raw.split('.')[1].length : 0;
+  const suffix = raw.replace(/[\d.]/g, '');
+  const duration = 850;
+  const start = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    node.textContent = `${(target * eased).toFixed(decimals)}${suffix}`;
+    if (progress < 1) {
+      window.requestAnimationFrame(tick);
+    } else {
+      node.textContent = raw;
+    }
+  }
+
+  node.textContent = `${(0).toFixed(decimals)}${suffix}`;
+  window.requestAnimationFrame(tick);
+}
+
+function playRevealEffects(node) {
+  node.classList.add('is-visible');
+  node.querySelectorAll('.stat-value').forEach(animateStatValue);
+}
 
 function feishuRun(score, result, trace = 'athlete_traj_merged.jsonl', judge = 'rubric_judges.json') {
   return { score, result, trace, judge };
@@ -443,6 +496,7 @@ function createRankRow(row, index) {
   const article = document.createElement('article');
   article.className = 'rank-row';
   article.style.setProperty('--rank-color', rankColors[index % rankColors.length]);
+  article.style.setProperty('--stagger-index', index);
 
   const rank = document.createElement('span');
   rank.className = 'rank-number';
@@ -498,8 +552,10 @@ function renderLeaderboard() {
 
 function createCaseCard(example) {
   const isModalMode = caseBoard?.dataset.caseMode === 'modal';
+  const caseIndex = exampleCases.findIndex((item) => item.id === example.id);
   const article = document.createElement('article');
   article.className = 'case-card';
+  article.style.setProperty('--stagger-index', Math.max(caseIndex, 0));
   article.classList.toggle('is-active', example.id === activeCaseId);
   if (isModalMode) {
     article.setAttribute('role', 'button');
@@ -770,6 +826,9 @@ function renderTrajectory(example) {
   const progress = trajectory.length <= 1 ? 100 : (activeTrajectoryStep / (trajectory.length - 1)) * 100;
   const activeKind = activeStep ? getTrajectoryKind(activeStep) : { label: 'Event', className: 'event' };
 
+  caseTrajectory?.classList.remove('is-refreshing');
+  void caseTrajectory?.offsetWidth;
+  caseTrajectory?.classList.add('is-refreshing');
   caseTrajectory?.classList.toggle('is-playing', isTrajectoryPlaying);
   caseTrajectoryMeta.textContent = `${activeRun.model} / ${trajectory.length} events / score ${formatCaseScore(activeRun.score)}`;
   trajectoryPlay.textContent = isTrajectoryPlaying ? 'Pause' : 'Play';
@@ -886,7 +945,7 @@ const observer = new IntersectionObserver(
   (entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
+        playRevealEffects(entry.target);
         observer.unobserve(entry.target);
       }
     }
@@ -894,6 +953,7 @@ const observer = new IntersectionObserver(
   { threshold: 0.14 }
 );
 
+prepareStaggeredReveal();
 for (const item of revealItems) observer.observe(item);
 
 for (const button of sortButtons) {
